@@ -5,7 +5,7 @@ class LotteryTicketGenerator:
     def __init__(self):
         self.lotto_ticket_types = {
             'max': {'name': 'LOTTO MAX', 'numbers_range': list(range(1, 50)), 'numbers_per_ticket': 7},
-            '649': {'name': 'LOTTO 6/49', 'numbers_range': list(range(1, 49)), 'numbers_per_ticket': 6},
+            '6/49': {'name': 'LOTTO 6/49', 'numbers_range': list(range(1, 49)), 'numbers_per_ticket': 6},
             'daily': {'name': 'DAILY GRAND', 'numbers_range': list(range(1, 49)), 'numbers_per_ticket': 5}
         }
 
@@ -30,16 +30,16 @@ def main():
     parser = argparse.ArgumentParser(description='Lottery Ticket Generator')
 
     # add arguments
-    parser.add_argument('-t', '--ticket_type', type=str, choices=['max', '649', 'daily'],
-                        help='Lottery Ticket types: max (Lotto Max), 649 (Lotto 649), daily (Daily Grand)')
+    parser.add_argument('-t', '--ticket', type=str, choices=['max', '6/49', 'daily'],
+                        help='Lottery Ticket types: LOTTO MAX (max), LOTTO 6/49 (6/49), DAILY GRAND (daily)')
     parser.add_argument('-q', '--quantity', type=int, default=1,
-                        help='Number of tickets to generate (default is 1 ticket)')
+                        help='Number of tickets (default is 1 ticket)')
     
     # parse the arguments
     args = parser.parse_args()
 
     # if argument value not provided display help message and return
-    if args.ticket_type is None:
+    if args.ticket is None:
         parser.print_help()
         return
 
@@ -47,7 +47,7 @@ def main():
     generator = LotteryTicketGenerator()
 
     # access the argument values
-    ticket_type_key = args.ticket_type
+    ticket_type_key = args.ticket
     quantity = args.quantity
 
     # display generated tickets based on ticket type
