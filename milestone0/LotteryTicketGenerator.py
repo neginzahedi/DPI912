@@ -1,3 +1,25 @@
+"""
+Lottery Ticket Generator
+
+This script allows you to generate lottery tickets of different types.
+It is developed by Fatemeh Zahedi.
+
+Usage:
+    python lottery_generator.py -t <ticket> -q <quantity>
+
+Arguments:
+    -t, --ticket   : The type of lottery ticket to generate.
+    -q, --quantity      : The number of tickets to generate.
+
+Lottery Ticket types:
+    - max   : Lotto Max
+    - 649   : Lotto 649
+    - daily : Daily Grand
+
+Example usage:
+    python lottery_generator.py -t max -q 5
+"""
+
 import argparse
 import random
 
