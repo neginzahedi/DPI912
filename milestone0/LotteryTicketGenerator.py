@@ -50,7 +50,7 @@ def main():
     ticket_type_key = args.ticket
     quantity = args.quantity
 
-    # display generated tickets based on ticket type
+    # display generated tickets based on ticket type to the STDOUT
     try:
         tickets = generator.tickets_generator(ticket_type_key, quantity)
         print(f"*** {generator.lotto_ticket_types[ticket_type_key]['name']} Ticket(s) ***")
