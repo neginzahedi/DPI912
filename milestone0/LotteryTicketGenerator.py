@@ -70,8 +70,8 @@ class LotteryTicketGenerator:
                 remainingPool = len(ticketPool) - 1 if ticketPool else None
                 for _ in range(length):
                     if ticketPool:
-                        random_index = random.randint(0, remainingPool)
-                        ticketSet.append(ticketPool.pop(random_index))
+                        randomIndex = random.randint(0, remainingPool)
+                        ticketSet.append(ticketPool.pop(randomIndex))
                         remainingPool -= 1
                 ticket.append(ticketSet)
             tickets.append(ticket)
