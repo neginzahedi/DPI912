@@ -1,66 +1,96 @@
+#!/usr/bin/python3
+
 """
-Lottery Ticket Generator
+==============================================================================
+   Assignment:  Milestone 0
 
-This script allows you to generate lottery tickets of different types.
-It is developed by Fatemeh Zahedi.
+  Author:  Fatemeh Zahedi
+  Language:  Python3 (argparse, random library)
+  To Compile:  n/a
 
-Usage:
-    python lottery_generator.py -t <ticket> -q <quantity>
+  Class:  Python for Programmers: Sockets and Security - DPI912NSA
+  Professor:  Harvey Kaduri
+  Due Date:  May 17, 2023
+  Re-Submitted:  May 25, 2023
 
-Arguments:
-    -t, --ticket   : The type of lottery ticket to generate.
-    -q, --quantity      : The number of tickets to generate.
+-----------------------------------------------------------------------------
 
-Lottery Ticket types:
-    - max   : Lotto Max
-    - 649   : Lotto 649
-    - daily : Daily Grand
+  Description:  This script allows users to generate lottery tickets of different types (Max, 6/49, and Daily Grand).
 
-Example usage:
-    python lottery_generator.py -t max -q 5
+  Collaboration:  -
+
+  Input: ./LotteryTicketGenerator.py -t <ticket> -q <quantity>
+          -t, --ticket   : The type of lottery ticket to generate.
+          -q, --quantity      : The number of tickets to generate.
+
+  Output:  The user passes the ticket type and number of tickets, and the script generates random tickets, shows the numbers for each ticket and save them to "Generated Tickets.txt" file.
+              *** LOTTO 6/49 Ticket(s) ***
+              1. [13 32 44 45 46 47]
+
+  Algorithm:  The LotteryTicketGenerator class stores information about different ticket types, such as their names, number ranges, and numbers per ticket.
+              The generateTickets method of the class takes the ticket type and quantity as inputs and generates random tickets based on the specified type.
+
+  Required Features Not Included:  -
+
+  Known Bugs:  -
+
+  Classification: -
+
+==============================================================================
 """
 
 import argparse
 import random
 
+class LotteryTicket:
+    def __init__(self, ticketType, numbersPerTicket, numbersRange):
+        self.ticketType = ticketType
+        self.numbersPerTicket = numbersPerTicket
+        self.numbersRange = numbersRange
+
 class LotteryTicketGenerator:
     def __init__(self):
-        self.lotto_ticket_types = {
-            'max': {'name': 'LOTTO MAX', 'numbers_range': list(range(1, 50)), 'numbers_per_ticket': 7},
-            '6/49': {'name': 'LOTTO 6/49', 'numbers_range': list(range(1, 49)), 'numbers_per_ticket': 6},
-            'daily': {'name': 'DAILY GRAND', 'numbers_range': list(range(1, 49)), 'numbers_per_ticket': 5}
+        self.lottoTicketTypes = {
+            "max": LotteryTicket("LOTTO MAX", [7], 50),
+            "6/49": LotteryTicket("LOTTO 6/49", [6], 49),
+            "daily": LotteryTicket("DAILY GRAND", [5], 49)
         }
 
-    def tickets_generator(self, key, quantity):
-        if key not in self.lotto_ticket_types:
-            raise ValueError(f"Invalid ticket type '{key}'")
-
-        ticket = self.lotto_ticket_types[key]
-        numbers_range = ticket['numbers_range']
-        numbers_per_ticket = ticket['numbers_per_ticket']
-
+    def generateTickets(self, quantityOfTicket, typeOfTicket):
+        # store generated tickets
         tickets = []
-        for _ in range(quantity):
-            ticket = random.sample(numbers_range, numbers_per_ticket)
-            ticket.sort()
+        for _ in range(quantityOfTicket):
+            # store generated ticket
+            ticket = []
+            # for how many numbers per ticket
+            for length in typeOfTicket.numbersPerTicket:
+                # store numbers within a set
+                ticketSet = []
+                ticketPool = list(range(1, typeOfTicket.numbersRange))
+                remainingPool = len(ticketPool) - 1 if ticketPool else None
+                for _ in range(length):
+                    if ticketPool:
+                        random_index = random.randint(0, remainingPool)
+                        ticketSet.append(ticketPool.pop(random_index))
+                        remainingPool -= 1
+                ticket.append(ticketSet)
             tickets.append(ticket)
-
         return tickets
 
 def main():
     # create the parser
-    parser = argparse.ArgumentParser(description='Lottery Ticket Generator')
+    parser = argparse.ArgumentParser(description="Lottery Ticket Generator")
 
     # add arguments
-    parser.add_argument('-t', '--ticket', type=str, choices=['max', '6/49', 'daily'],
-                        help='Lottery Ticket types: LOTTO MAX (max), LOTTO 6/49 (6/49), DAILY GRAND (daily)')
-    parser.add_argument('-q', '--quantity', type=int, default=1,
-                        help='Number of tickets (default is 1 ticket)')
+    parser.add_argument("-t", "--ticket", type=str, choices=["max", "6/49", "daily"],
+                        help="Lottery Ticket types: LOTTO MAX (max), LOTTO 6/49 (6/49), DAILY GRAND (daily)")
+    parser.add_argument("-q", "--quantity", type=int, default=1,
+                        help="Number of tickets (default is 1 ticket)")
     
     # parse the arguments
     args = parser.parse_args()
 
-    # if argument value not provided display help message and return
+    # if argument value not provided, display help message and return
     if args.ticket is None:
         parser.print_help()
         return
@@ -69,17 +99,24 @@ def main():
     generator = LotteryTicketGenerator()
 
     # access the argument values
-    ticket_type_key = args.ticket
+    ticketTypeKey = args.ticket
     quantity = args.quantity
 
-    # display generated tickets based on ticket type to the STDOUT
+    # display generated tickets based on ticket type to the STDOUT and save to the file
     try:
-        tickets = generator.tickets_generator(ticket_type_key, quantity)
-        print(f"*** {generator.lotto_ticket_types[ticket_type_key]['name']} Ticket(s) ***")
+        tickets = generator.generateTickets(quantity, generator.lottoTicketTypes[ticketTypeKey])
+
+        with open("Generated Tickets.txt", 'w') as file:
+            file.write(f"*** {generator.lottoTicketTypes[ticketTypeKey].ticketType} Ticket(s) ***\n")
+            for i, ticket in enumerate(tickets, 1):
+                file.write(f"{i}. {', '.join(map(str, ticket[0]))}\n")
+
+        print(f"Tickets generated and saved to 'Generated Tickets.txt'")
+        print(f"*** {generator.lottoTicketTypes[ticketTypeKey].ticketType} Ticket(s) ***")
         for i, ticket in enumerate(tickets, 1):
-            print(f"{i}. [{' '.join(map(str, ticket))}]")
+            print(f"{i}. {', '.join(map(str, ticket[0]))}")
     except ValueError as e:
         print(f"Error: {str(e)}")
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()
