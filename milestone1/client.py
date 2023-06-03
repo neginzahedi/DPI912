@@ -49,8 +49,6 @@
 import argparse
 import socket
 import os
-import signal
-import sys
 
 def requestTickets(host, port, ticketType, quantity, identifier):
     clientSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
