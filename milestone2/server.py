@@ -10,7 +10,7 @@
 #   Class:  Python for Programmers: Sockets and Security - DPI912NSA
 #   Professor:  Harvey Kaduri
 #   Due Date:  Jun 4, 2023
-#   Submitted:  Jun 4, 2023
+#   Submitted:  Jun 3, 2023
 
 # -----------------------------------------------------------------------------
 
@@ -19,20 +19,16 @@
 
 #   Collaboration:  -
 
-#   Input: The server waits for client requests in the form of a string with the ticket type and quantity.
+#   Input: python server.py -H ::1 -p 8888 -s 10 (all has default)
 
-#   Output: The server responds with a string containing the generated tickets and sent it back to the client.
+#   Output: Server listening on, Accepted connection from [IPv6 address]:[port], Error: [error message]
 
 #   Algorithm:
-#     1. Define LotteryTicket class to store ticket information.
-#     2. Define LotteryTicketGenerator class to generate random tickets.
-#     3. Extract ticket type and quantity from client request in processClientRequest function.
-#     4. Use LotteryTicketGenerator to generate requested tickets.
-#     5. Format the generated tickets as a string and Send processed tickets to client using client socket.
-#     6. Close the client socket after sending the response.
-#     7. The server listens for incoming connections and handles each client request sequentially.
-#     8. The main function parses the command-line arguments to get the server's host and port and starts the server.
-
+#     1. Start the server by creating a socket and binding it to the specified IPv6 address and port.
+#     2. Accept a client connection and receive the client's request, which includes the ticket type and quantity of tickets requested.
+#     3. Use the LotteryTicketGenerator to generate the requested number of tickets based on the ticket type and quantity. Each ticket is a list of sets, where each set represents the numbers on a ticket.
+#     4. Process the generated tickets by converting them to a string format that can be sent back to the client.
+#     5. Close the client connection and go back to listening for new connections
 
 #   Required Features Not Included:  -
 
@@ -41,6 +37,7 @@
 #   Classification: -
 
 # ==============================================================================
+
 import argparse
 import random
 import socket
@@ -105,7 +102,7 @@ def runServer(host, port, pool_size):
     print(f"Server listening on [{host}]:{port}...")
     
     # Create a signal handler to handle child processes
-    def signal_handler(signum, frame):
+    def signalHandler(signum, frame):
         while True:
             try:
                 pid, status = os.waitpid(-1, os.WNOHANG)
@@ -116,7 +113,7 @@ def runServer(host, port, pool_size):
                 break
     
     # Register the signal handler for SIGCHLD (child process termination)
-    signal.signal(signal.SIGCHLD, signal_handler)
+    signal.signal(signal.SIGCHLD, signalHandler)
     
     while True:
         try:

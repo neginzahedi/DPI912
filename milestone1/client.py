@@ -1,7 +1,7 @@
 #!/usr/bin/python3
 
 # ============================================================================
-#   Assignment:  Milestone 1
+#   Assignment:  Milestone 2
 #
 #  Author:  Fatemeh Zahedi
 #  Language:  Python3
@@ -9,8 +9,8 @@
 #
 #  Class:  Python for Programmers: Sockets and Security - DPI912NSA
 #  Professor:  Harvey Kaduri
-#  Due Date:  May 25, 2023
-#  Re-Submitted:  May 30, 2023
+#  Due Date:  Jun 4, 2023
+#  Submitted:  Jun 3, 2023
 #
 # -----------------------------------------------------------------------------
 #
@@ -51,11 +51,11 @@ import socket
 import os
 
 def requestTickets(host, port, ticketType, quantity, identifier):
-    clientSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    clientSocket = socket.socket(socket.AF_INET6, socket.SOCK_STREAM)
 
     try:
         clientSocket.connect((host, port))
-        print(f"Connected to {host}:{port}")
+        print(f"Connected to [{host}]:{port}")
 
         request = f"{ticketType},{quantity}"
         clientSocket.send(request.encode())
@@ -80,7 +80,7 @@ def requestTickets(host, port, ticketType, quantity, identifier):
 
 def main():
     parser = argparse.ArgumentParser(description="Lottery Ticket Generator (Client)")
-    parser.add_argument("-H", "--host", type=str, default="127.0.0.1", help="Server IPv4 address (default is 127.0.0.1)")
+    parser.add_argument("-H", "--host", type=str, default="::1", help="Server IPv6 address (default is ::1)")
     parser.add_argument("-p", "--port", type=int, default=8888, help="Port number (default is 8888)")
     parser.add_argument("-t", "--ticket", type=str, default="max", help="Ticket type (default is max)")
     parser.add_argument("-q", "--quantity", type=int, default=1, help="Number of tickets (default is 1)")
