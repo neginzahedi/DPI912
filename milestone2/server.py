@@ -41,10 +41,10 @@
 #   Classification: -
 
 # ==============================================================================
-
 import argparse
 import random
 import socket
+import os
 
 class LotteryTicket:
     def __init__(self, ticketType, numbersPerTicket, numbersRange):
@@ -58,8 +58,8 @@ class LotteryTicketGenerator:
             "max": LotteryTicket("LOTTO MAX", [7], 50),
             "6/49": LotteryTicket("LOTTO 6/49", [6], 49),
             "daily": LotteryTicket("DAILY GRAND", [5], 49)
-    }
-    
+        }
+
     def generateTickets(self, quantityOfTicket, typeOfTicket):
         tickets = []
         for _ in range(quantityOfTicket):
@@ -79,42 +79,50 @@ class LotteryTicketGenerator:
 
 def processClientRequest(clientSocket, addr, ticketType, quantity):
     generator = LotteryTicketGenerator()
-    
+
     try:
         tickets = generator.generateTickets(quantity, generator.lottoTicketTypes[ticketType])
-        
+
         processedTickets = ""
         for i, ticket in enumerate(tickets, 1):
             processedTickets += f"{i}. {', '.join(map(str, ticket[0]))}\n"
-        
+
         clientSocket.send(processedTickets.encode())
-    
+
     except (ValueError, KeyError) as e:
         errorMessage = f"Error: {str(e)}"
         clientSocket.send(errorMessage.encode())
-    
+
     clientSocket.close()
 
-def runServer(host, port):
+def runServer(host, port, pool_size):
     serverSocket = socket.socket(socket.AF_INET6, socket.SOCK_STREAM)
     serverSocket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
     serverSocket.bind((host, port))
     serverSocket.listen(5)
     print(f"Server listening on [{host}]:{port}...")
-    
+
     while True:
         clientSocket, addr = serverSocket.accept()
         print(f"Accepted connection from [{addr[0]}]:{addr[1]}")
-        request = clientSocket.recv(1024).decode().strip()
-        ticketType, quantity = request.split(',')
-        processClientRequest(clientSocket, addr, ticketType, int(quantity))
+
+        pid = os.fork()
+        if pid == 0:  # Child process
+            serverSocket.close()
+            request = clientSocket.recv(1024).decode().strip()
+            ticketType, quantity = request.split(',')
+            processClientRequest(clientSocket, addr, ticketType, int(quantity))
+            os._exit(0)
+        else:  # Parent process
+            clientSocket.close()
 
 def main():
     parser = argparse.ArgumentParser(description="Lottery Ticket Generator (Server)")
     parser.add_argument("-H", "--host", type=str, default="::1", help="Server IPv6 address (default is ::1)")
     parser.add_argument("-p", "--port", type=int, default=8888, help="Port number (default is 8888)")
+    parser.add_argument("-s", "--pool-size", type=int, default=5, help="Listening pool size (default is 5)")
     args = parser.parse_args()
-    runServer(args.host, args.port)
+    runServer(args.host, args.port, args.pool_size)
 
 if __name__ == "__main__":
     main()

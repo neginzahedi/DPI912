@@ -48,7 +48,6 @@
 
 import argparse
 import socket
-import os
 
 def requestTickets(host, port, ticketType, quantity, identifier):
     clientSocket = socket.socket(socket.AF_INET6, socket.SOCK_STREAM)
@@ -65,7 +64,7 @@ def requestTickets(host, port, ticketType, quantity, identifier):
 
         if identifier:
             with open("GeneratedTickets.txt", "a") as file:
-                if not os.path.isfile("GeneratedTickets.txt"):
+                if not file.tell():  # Check if the file is empty
                     file.write("Generated Tickets:\n")
                 file.write(f"Identifier: {identifier}\n")
                 file.write(f"Ticket Type: {ticketType}\n")
