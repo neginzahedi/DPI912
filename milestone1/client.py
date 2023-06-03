@@ -48,13 +48,16 @@
 
 import argparse
 import socket
+import os
+import signal
+import sys
 
 def requestTickets(host, port, ticketType, quantity, identifier):
-    clientSocket = socket.socket(socket.AF_INET6, socket.SOCK_STREAM)
+    clientSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
     try:
         clientSocket.connect((host, port))
-        print(f"Connected to [{host}]:{port}")
+        print(f"Connected to {host}:{port}")
 
         request = f"{ticketType},{quantity}"
         clientSocket.send(request.encode())
@@ -64,7 +67,7 @@ def requestTickets(host, port, ticketType, quantity, identifier):
 
         if identifier:
             with open("GeneratedTickets.txt", "a") as file:
-                if not file.tell():  # Check if the file is empty
+                if not os.path.isfile("GeneratedTickets.txt"):
                     file.write("Generated Tickets:\n")
                 file.write(f"Identifier: {identifier}\n")
                 file.write(f"Ticket Type: {ticketType}\n")
@@ -79,7 +82,7 @@ def requestTickets(host, port, ticketType, quantity, identifier):
 
 def main():
     parser = argparse.ArgumentParser(description="Lottery Ticket Generator (Client)")
-    parser.add_argument("-H", "--host", type=str, default="::1", help="Server IPv6 address (default is ::1)")
+    parser.add_argument("-H", "--host", type=str, default="127.0.0.1", help="Server IPv4 address (default is 127.0.0.1)")
     parser.add_argument("-p", "--port", type=int, default=8888, help="Port number (default is 8888)")
     parser.add_argument("-t", "--ticket", type=str, default="max", help="Ticket type (default is max)")
     parser.add_argument("-q", "--quantity", type=int, default=1, help="Number of tickets (default is 1)")

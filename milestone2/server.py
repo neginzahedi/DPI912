@@ -45,6 +45,8 @@ import argparse
 import random
 import socket
 import os
+import signal
+import sys
 
 class LotteryTicket:
     def __init__(self, ticketType, numbersPerTicket, numbersRange):
@@ -59,7 +61,7 @@ class LotteryTicketGenerator:
             "6/49": LotteryTicket("LOTTO 6/49", [6], 49),
             "daily": LotteryTicket("DAILY GRAND", [5], 49)
         }
-
+    
     def generateTickets(self, quantityOfTicket, typeOfTicket):
         tickets = []
         for _ in range(quantityOfTicket):
@@ -79,48 +81,72 @@ class LotteryTicketGenerator:
 
 def processClientRequest(clientSocket, addr, ticketType, quantity):
     generator = LotteryTicketGenerator()
-
+    
     try:
         tickets = generator.generateTickets(quantity, generator.lottoTicketTypes[ticketType])
-
+        
         processedTickets = ""
         for i, ticket in enumerate(tickets, 1):
             processedTickets += f"{i}. {', '.join(map(str, ticket[0]))}\n"
-
+        
         clientSocket.send(processedTickets.encode())
-
+    
     except (ValueError, KeyError) as e:
         errorMessage = f"Error: {str(e)}"
         clientSocket.send(errorMessage.encode())
-
+    
     clientSocket.close()
 
-def runServer(host, port, pool_size):
-    serverSocket = socket.socket(socket.AF_INET6, socket.SOCK_STREAM)
+def runServer(host, port, poolSize):
+    serverSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     serverSocket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+    serverSocket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEPORT, 1)
     serverSocket.bind((host, port))
-    serverSocket.listen(5)
-    print(f"Server listening on [{host}]:{port}...")
-
+    serverSocket.listen(poolSize)
+    print(f"Server listening on {host}:{port}...")
+    
+    def handleChildSignal(signum, frame):
+        while True:
+            try:
+                # Loop through all child processes to prevent zombies
+                pid, status = os.waitpid(-1, os.WNOHANG)
+                if pid == 0:
+                    break
+                print(f"Child process {pid} terminated.")
+            except OSError:
+                break
+    
+    signal.signal(signal.SIGCHLD, handleChildSignal)
+    
     while True:
-        clientSocket, addr = serverSocket.accept()
-        print(f"Accepted connection from [{addr[0]}]:{addr[1]}")
-
-        pid = os.fork()
-        if pid == 0:  # Child process
+        try:
+            clientSocket, addr = serverSocket.accept()
+            print(f"Accepted connection from {addr[0]}:{addr[1]}")
+            
+            pid = os.fork()
+            
+            if pid == 0:
+                # Child process
+                serverSocket.close()  # Close the server socket in the child process
+                request = clientSocket.recv(1024).decode().strip()
+                ticketType, quantity = request.split(',')
+                processClientRequest(clientSocket, addr, ticketType, int(quantity))
+                sys.exit(0)  # Terminate the child process
+                
+            else:
+                # Parent process
+                clientSocket.close()  # Close the client socket in the parent process
+            
+        except KeyboardInterrupt:
+            print("Server terminated.")
             serverSocket.close()
-            request = clientSocket.recv(1024).decode().strip()
-            ticketType, quantity = request.split(',')
-            processClientRequest(clientSocket, addr, ticketType, int(quantity))
-            os._exit(0)
-        else:  # Parent process
-            clientSocket.close()
+            sys.exit(0)
 
 def main():
     parser = argparse.ArgumentParser(description="Lottery Ticket Generator (Server)")
-    parser.add_argument("-H", "--host", type=str, default="::1", help="Server IPv6 address (default is ::1)")
+    parser.add_argument("-H", "--host", type=str, default="127.0.0.1", help="Server IP address (default is 127.0.0.1)")
     parser.add_argument("-p", "--port", type=int, default=8888, help="Port number (default is 8888)")
-    parser.add_argument("-s", "--pool-size", type=int, default=5, help="Listening pool size (default is 5)")
+    parser.add_argument("-s", "--pool-size", type=int, default=5, help="Size of the listening pool (default is 5)")
     args = parser.parse_args()
     runServer(args.host, args.port, args.pool_size)
 
