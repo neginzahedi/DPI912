@@ -1,3 +1,39 @@
+#!/usr/bin/python3
+
+# ==============================================================================
+#   Assignment:  Milestone 2
+#
+#   Author:  Fatemeh Zahedi
+#   Language:  Python3
+#   To Compile:  -
+#
+#   Class:  Python for Programmers: Sockets and Security - DPI912NSA
+#   Professor:  Harvey Kaduri
+#   Due Date:  June 4, 2023
+#   Re-Submitted:  June 4, 2023
+#
+# -----------------------------------------------------------------------------
+#
+#   Description: This script is for a server to generate lottery tickets (Max, 6/49, and Daily Grand) upon client requests.
+#                The server listens for incoming connections and generates random tickets based on the requested type and quantity.
+#
+#   Collaboration:  -
+#
+#   Input: python client.py -H <server_host> -p <server_port> -t <ticket_type> -q <quantity> -i <identifier> -n <requests>
+#
+#   Output: If the client successfully connects to the server and receives a response, the response will be printed to the console. 
+#           The response contains the generated lottery tickets or error message if there was an issue.
+#           
+#
+#   Algorithm: The script establishes a connection with the server and sends requests in parallel using child processes. 
+#              Upon receiving responses, it prints them to the console. The responses are also appended to a file. 
+#  
+#   Required Features Not Included:  -
+#   Known Bugs:  -
+#   Classification: -
+# ==============================================================================
+
+
 import argparse
 import os
 import socket
