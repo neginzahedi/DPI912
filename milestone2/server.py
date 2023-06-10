@@ -10,7 +10,7 @@
 #   Class:  Python for Programmers: Sockets and Security - DPI912NSA
 #   Professor:  Harvey Kaduri
 #   Due Date:  June 4, 2023
-#   Re-Submitted:  June 4, 2023
+#   Re-Submitted:  June 10, 2023
 #
 # -----------------------------------------------------------------------------
 #
@@ -19,7 +19,7 @@
 #
 #   Collaboration:  -
 #
-#   Input: python server.py -H ::1 -p 8888 (default values)
+#   Input: python3 server.py -H ::1 -p 8888 (default values)
 #
 #   Output: 
 #           Server listening on [::1]:8888...
@@ -96,10 +96,12 @@ def runServer(host, port):
     serverSocket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
     serverSocket.bind((host, port))
     serverSocket.listen(5)
-    serverSocket.setblocking(False)  # Set socket to non-blocking mode
+    serverSocket.setblocking(False)
+
     print(f"Server listening on [{host}]:{port}...")
 
-    signal.signal(signal.SIGCHLD, signal.SIG_IGN)  # Prevent zombies
+    # Set up the signal handler for SIGCHLD
+    signal.signal(signal.SIGCHLD, signalHandler) 
 
     while True:
         try:
@@ -137,10 +139,31 @@ def runServer(host, port):
     serverSocket.close()
 
 def handleClient(clientSocket, addr):
-    request = clientSocket.recv(1024).decode().strip()
-    ticketType, quantity = request.split(',')
-    processClientRequest(clientSocket, addr, ticketType, int(quantity))
-    clientSocket.close()
+    try:
+        request = clientSocket.recv(1024).decode().strip()
+        ticketType, quantity = request.split(',')
+        processClientRequest(clientSocket, addr, ticketType, int(quantity))
+    except (ValueError, KeyError) as e:
+        errorMessage = f"Error: {str(e)}"
+        clientSocket.send(errorMessage.encode())
+    except socket.error as e:
+        print(f"Socket error occurred: {str(e)}")
+    finally:
+        clientSocket.close()
+
+
+def signalHandler(signum, frame):
+    # Collect exit status of terminated child processes
+    while True:
+        try:
+            pid, status = os.waitpid(-1, os.WNOHANG)
+            if pid == 0:
+                # No more terminated child processes
+                break
+        except OSError:
+            # No child processes
+            break
+
 
 def main():
     parser = argparse.ArgumentParser(description="Lottery Ticket Generator (Server)")
